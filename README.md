@@ -1,4 +1,4 @@
-### Frontend (React + TypeScript)
+# Frontend (React + TypeScript)
 
 1. Clonar el repositorio del frontend
 2. Navegar a la carpeta del proyecto
