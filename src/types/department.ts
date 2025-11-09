@@ -35,6 +35,7 @@ export interface DepartmentFilters {
   sort_order?: 'asc' | 'desc';
   per_page?: number;
   page?: number;
+  [key: string]: unknown;
 }
 
 export type DepartmentListResponse = {

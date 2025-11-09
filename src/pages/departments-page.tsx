@@ -8,15 +8,27 @@ import {
   PartitionOutlined,
 } from '@ant-design/icons';
 import type { Department, DepartmentFormData } from '../types/department';
+import type { Employee, EmployeeFormData } from '../types/employee';
 import {
   useDepartments,
   useCreateDepartment,
   useUpdateDepartment,
   useDeleteDepartment,
 } from '../hooks/use-departments';
+import {
+  useEmployees,
+  useCreateEmployee,
+  useUpdateEmployee,
+  useDeleteEmployee,
+  useDepartments as useEmployeeDepartments,
+  usePositions,
+} from '../hooks/use-employees';
 import { useDepartmentTable } from '../hooks/use-department-table';
+import { useEmployeeTable } from '../hooks/use-employee-table';
 import { DepartmentModal } from '../components/departments/department-modal';
 import { DepartmentTable } from '../components/departments/department-table';
+import { EmployeeModal } from '../components/employees/employee-modal';
+import { EmployeeTable } from '../components/employees/employee-table';
 
 const { Search } = Input;
 
@@ -24,51 +36,68 @@ export default function DepartmentsPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<'create' | 'edit'>('create');
   const [selectedDepartment, setSelectedDepartment] = useState<Department>();
+  const [selectedEmployee, setSelectedEmployee] = useState<Employee>();
   const [viewMode, setViewMode] = useState<'list' | 'tree'>('list');
   const [activeTab, setActiveTab] = useState('divisions');
 
   const {
-    filters,
-    handleSearch,
-    handleTableChange,
-    resetToFirstPage,
+    filters: deptFilters,
+    handleSearch: handleDeptSearch,
+    handleTableChange: handleDeptTableChange,
+    resetToFirstPage: resetDeptToFirstPage,
   } = useDepartmentTable();
 
-  const { data, isLoading } = useDepartments(filters);
-  const createMutation = useCreateDepartment();
-  const updateMutation = useUpdateDepartment();
-  const deleteMutation = useDeleteDepartment();
+  const { data: deptData, isLoading: isDeptLoading } = useDepartments(deptFilters);
+  const createDeptMutation = useCreateDepartment();
+  const updateDeptMutation = useUpdateDepartment();
+  const deleteDeptMutation = useDeleteDepartment();
 
-  const handleCreate = () => {
+  const {
+    filters: empFilters,
+    handleSearch: handleEmpSearch,
+    handleTableChange: handleEmpTableChange,
+    resetToFirstPage: resetEmpToFirstPage,
+  } = useEmployeeTable();
+
+  const { data: empData, isLoading: isEmpLoading } = useEmployees(empFilters);
+  const createEmpMutation = useCreateEmployee();
+  const updateEmpMutation = useUpdateEmployee();
+  const deleteEmpMutation = useDeleteEmployee();
+  const { data: departmentsList } = useEmployeeDepartments();
+  const { data: positionsList } = usePositions();
+
+  const handleCreateDept = () => {
+    setActiveTab('divisions');
     setModalMode('create');
     setSelectedDepartment(undefined);
     setModalOpen(true);
   };
 
-  const handleEdit = (department: Department) => {
+  const handleEditDept = (department: Department) => {
+    setActiveTab('divisions');
     setModalMode('edit');
     setSelectedDepartment(department);
     setModalOpen(true);
   };
 
-  const handleDelete = (id: number) => {
-    deleteMutation.mutate(id, {
+  const handleDeleteDept = (id: number) => {
+    deleteDeptMutation.mutate(id, {
       onSuccess: () => {
-        resetToFirstPage();
+        resetDeptToFirstPage();
       },
     });
   };
 
-  const handleModalSubmit = (values: DepartmentFormData) => {
+  const handleDeptModalSubmit = (values: DepartmentFormData) => {
     if (modalMode === 'create') {
-      createMutation.mutate(values, {
+      createDeptMutation.mutate(values, {
         onSuccess: () => {
           setModalOpen(false);
-          resetToFirstPage();
+          resetDeptToFirstPage();
         },
       });
     } else if (selectedDepartment) {
-      updateMutation.mutate(
+      updateDeptMutation.mutate(
         { id: selectedDepartment.id, data: values },
         {
           onSuccess: () => {
@@ -76,6 +105,64 @@ export default function DepartmentsPage() {
           },
         }
       );
+    }
+  };
+
+  const handleCreateEmp = () => {
+    setActiveTab('employees');
+    setModalMode('create');
+    setSelectedEmployee(undefined);
+    setModalOpen(true);
+  };
+
+  const handleEditEmp = (employee: Employee) => {
+    setActiveTab('employees');
+    setModalMode('edit');
+    setSelectedEmployee(employee);
+    setModalOpen(true);
+  };
+
+  const handleDeleteEmp = (id: number) => {
+    deleteEmpMutation.mutate(id, {
+      onSuccess: () => {
+        resetEmpToFirstPage();
+      },
+    });
+  };
+
+  const handleEmpModalSubmit = (values: EmployeeFormData) => {
+    if (modalMode === 'create') {
+      createEmpMutation.mutate(values, {
+        onSuccess: () => {
+          setModalOpen(false);
+          resetEmpToFirstPage();
+        },
+      });
+    } else if (selectedEmployee) {
+      updateEmpMutation.mutate(
+        { id: selectedEmployee.id, data: values },
+        {
+          onSuccess: () => {
+            setModalOpen(false);
+          },
+        }
+      );
+    }
+  };
+
+  const handleCreate = () => {
+    if (activeTab === 'divisions') {
+      handleCreateDept();
+    } else {
+      handleCreateEmp();
+    }
+  };
+
+  const handleModalSubmit = (values: DepartmentFormData | EmployeeFormData) => {
+    if (activeTab === 'divisions') {
+      handleDeptModalSubmit(values as DepartmentFormData);
+    } else {
+      handleEmpModalSubmit(values as EmployeeFormData);
     }
   };
 
@@ -177,7 +264,7 @@ export default function DepartmentsPage() {
           <Search
             placeholder="Buscar"
             allowClear
-            onSearch={handleSearch}
+            onSearch={activeTab === 'divisions' ? handleDeptSearch : handleEmpSearch}
             style={{ width: 300 }}
           />
         </div>
@@ -185,32 +272,51 @@ export default function DepartmentsPage() {
         <div style={{ background: '#fff', padding: '16px 24px 24px' }}>
           {activeTab === 'divisions' && (
             <DepartmentTable
-              data={data?.data}
-              loading={isLoading}
-              filters={filters}
-              total={data?.meta?.total || 0}
-              onTableChange={handleTableChange}
-              onEdit={handleEdit}
-              onDelete={handleDelete}
+              data={deptData?.data}
+              loading={isDeptLoading}
+              filters={deptFilters}
+              total={deptData?.meta?.total || 0}
+              onTableChange={handleDeptTableChange}
+              onEdit={handleEditDept}
+              onDelete={handleDeleteDept}
             />
           )}
           {activeTab === 'employees' && (
-            <div style={{ padding: '24px', textAlign: 'center' }}>
-              Tabla de colaboradores (pendiente)
-            </div>
+            <EmployeeTable
+              data={empData?.data}
+              loading={isEmpLoading}
+              filters={empFilters}
+              total={empData?.meta?.total || 0}
+              onTableChange={handleEmpTableChange}
+              onEdit={handleEditEmp}
+              onDelete={handleDeleteEmp}
+            />
           )}
         </div>
       </div>
 
-      <DepartmentModal
-        open={modalOpen}
-        mode={modalMode}
-        department={selectedDepartment}
-        departments={data?.data || []}
-        onCancel={() => setModalOpen(false)}
-        onSubmit={handleModalSubmit}
-        loading={createMutation.isPending || updateMutation.isPending}
-      />
+      {activeTab === 'divisions' ? (
+        <DepartmentModal
+          open={modalOpen}
+          mode={modalMode}
+          department={selectedDepartment}
+          departments={deptData?.data || []}
+          onCancel={() => setModalOpen(false)}
+          onSubmit={handleModalSubmit}
+          loading={createDeptMutation.isPending || updateDeptMutation.isPending}
+        />
+      ) : (
+        <EmployeeModal
+          open={modalOpen}
+          mode={modalMode}
+          employee={selectedEmployee}
+          departments={departmentsList || []}
+          positions={positionsList || []}
+          onCancel={() => setModalOpen(false)}
+          onSubmit={handleModalSubmit}
+          loading={createEmpMutation.isPending || updateEmpMutation.isPending}
+        />
+      )}
     </div>
   );
 }

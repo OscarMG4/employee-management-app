@@ -1,28 +1,20 @@
 import type { TablePaginationConfig } from 'antd';
-import type { DepartmentFilters } from '../types/department';
+import type { EmployeeFilters } from '../types/employee';
 import { useTableFilters } from './use-table-filters';
 
-export function useDepartmentTable() {
+export function useEmployeeTable() {
   const {
     filters,
     setFilters,
     handleSearch,
     handleTableChange: baseHandleTableChange,
     resetToFirstPage,
-  } = useTableFilters<DepartmentFilters>({
+  } = useTableFilters<EmployeeFilters>({
     page: 1,
     per_page: 10,
     sort_by: 'created_at',
-    sort_order: 'desc',
-    search_column: 'name',
+    sort_direction: 'desc',
   });
-
-  const handleSearchColumnChange = (column: 'name' | 'ambassador_name') => {
-    setFilters((prev) => ({
-      ...prev,
-      search_column: column,
-    }));
-  };
 
   const handleTableChange = (
     pagination: TablePaginationConfig,
@@ -30,13 +22,13 @@ export function useDepartmentTable() {
     sorter: unknown
   ) => {
     baseHandleTableChange(pagination, tableFilters, sorter, (filters) => ({
-      level: filters.level as number[] | undefined,
-      name: filters.name as string[] | undefined,
-      parent_name: filters.parent as string[] | undefined,
-      sort_by: sorter && (sorter as { field?: string }).field
-        ? (sorter as { field: string }).field as DepartmentFilters['sort_by']
+      department: filters.department as string | undefined,
+      position: filters.position as string | undefined,
+      status: filters.status as 'active' | 'inactive' | undefined,
+      sort_by: sorter && (sorter as { field?: string }).field 
+        ? (sorter as { field: string }).field as EmployeeFilters['sort_by']
         : undefined,
-      sort_order: sorter && (sorter as { order?: string }).order
+      sort_direction: sorter && (sorter as { order?: string }).order
         ? ((sorter as { order: string }).order === 'ascend' ? 'asc' : 'desc')
         : undefined,
     }));
@@ -46,7 +38,6 @@ export function useDepartmentTable() {
     filters,
     setFilters,
     handleSearch,
-    handleSearchColumnChange,
     handleTableChange,
     resetToFirstPage,
   };

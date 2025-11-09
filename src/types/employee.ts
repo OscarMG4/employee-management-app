@@ -60,10 +60,8 @@ export interface UpdateEmployeeDto {
   notes?: string;
 }
 
-// Usar PaginatedList de response.ts
 export type EmployeeListResponse = PaginatedList<Employee>;
 
-// Re-exportar para compatibilidad
 export type PaginationMeta = Meta;
 export type PaginationLinks = Links;
 
@@ -92,8 +90,9 @@ export interface EmployeeFilters {
   department?: string;
   position?: string;
   status?: 'active' | 'inactive';
-  sort_by?: 'name' | 'email' | 'salary' | 'hire_date' | 'department' | 'created_at';
+  sort_by?: 'name' | 'email' | 'position' | 'salary' | 'hire_date' | 'department' | 'created_at';
   sort_direction?: 'asc' | 'desc';
   per_page?: number;
   page?: number;
+  [key: string]: unknown;
 }
