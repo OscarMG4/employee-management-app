@@ -1,4 +1,4 @@
-import axios from 'axios';
+import api from './api';
 import type {
   Department,
   DepartmentFormData,
@@ -6,36 +6,34 @@ import type {
   DepartmentFilters,
 } from '../types/department';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/api';
-
 export const departmentService = {
   async getDepartments(
     filters?: DepartmentFilters
   ): Promise<DepartmentListResponse> {
-    const response = await axios.get<DepartmentListResponse>(
-      `${API_URL}/departments`,
+    const response = await api.get<DepartmentListResponse>(
+      '/departments',
       { params: filters }
     );
     return response.data;
   },
 
   async getDepartment(id: number): Promise<Department> {
-    const response = await axios.get<{ data: Department }>(
-      `${API_URL}/departments/${id}`
+    const response = await api.get<{ data: Department }>(
+      `/departments/${id}`
     );
     return response.data.data;
   },
 
   async getSubdepartments(id: number): Promise<Department[]> {
-    const response = await axios.get<{ data: Department[] }>(
-      `${API_URL}/departments/${id}/subdepartments`
+    const response = await api.get<{ data: Department[] }>(
+      `/departments/${id}/subdepartments`
     );
     return response.data.data;
   },
 
   async createDepartment(data: DepartmentFormData): Promise<Department> {
-    const response = await axios.post<{ data: Department }>(
-      `${API_URL}/departments`,
+    const response = await api.post<{ data: Department }>(
+      '/departments',
       data
     );
     return response.data.data;
@@ -45,14 +43,14 @@ export const departmentService = {
     id: number,
     data: Partial<DepartmentFormData>
   ): Promise<Department> {
-    const response = await axios.put<{ data: Department }>(
-      `${API_URL}/departments/${id}`,
+    const response = await api.put<{ data: Department }>(
+      `/departments/${id}`,
       data
     );
     return response.data.data;
   },
 
   async deleteDepartment(id: number): Promise<void> {
-    await axios.delete(`${API_URL}/departments/${id}`);
+    await api.delete(`/departments/${id}`);
   },
 };
